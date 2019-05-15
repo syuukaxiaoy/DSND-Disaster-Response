@@ -4,7 +4,17 @@ import numpy as np
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """
+    Load data and merge (messages and categories)to datasets.
     
+    Args:
+    messages_filepath: messages file path (str)
+    categories_filepath: categories file path (str)
+    
+    return:
+    df(Dataframe) : merged messages and categories
+    
+    """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories, on='id', how='outer')
@@ -13,6 +23,15 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    """
+    Clean data
+    
+    Args:
+    df : dataset
+    
+    Return:
+    cleaned dataset
+    """
     categories = df['categories'].str.split(';', expand=True)
     row = categories.iloc[0,:]
     categories_names = row.apply(lambda x: x[:-2])
@@ -29,6 +48,16 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
+    """
+    Save data
+    
+    Args:
+    df：cleaned dataset
+    database_filename：name of database
+    
+    Return:
+    None
+    """
     
     engine = create_engine('sqlite:///' + database_filename)
     df.to_sql('disaster', engine, if_exists='replace', index=False)
