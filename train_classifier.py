@@ -25,7 +25,7 @@ nltk.download(['stopwords', 'punkt', 'wordnet', 'averaged_perceptron_tagger'])
 def load_data(database_filepath):
     engine = create_engine('sqlite:///' + database_filepath)
     with engine.connect() as conn, conn.begin():
-        df = pd.read_sql_table('df', conn)
+        df = pd.read_sql_table('disaster', conn)
     X = df['message']
     Y = df.iloc[:,4:]
     category_names = Y.columns
