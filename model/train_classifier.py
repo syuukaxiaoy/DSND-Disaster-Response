@@ -23,6 +23,17 @@ nltk.download(['stopwords', 'punkt', 'wordnet', 'averaged_perceptron_tagger'])
 
 
 def load_data(database_filepath):
+    """
+    Load data from database and return X, Y, category_names.
+    
+    Args:
+    database_filepath: database filename with path(str)
+    
+    Return:
+      X: messages X(DataFrame)
+      y: labels part in messages Y(DataFrame)
+      category_names: category-names (str)
+    """
     engine = create_engine('sqlite:///' + database_filepath)
     with engine.connect() as conn, conn.begin():
         df = pd.read_sql_table('disaster', conn)
@@ -33,7 +44,19 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """
+    Tokenizes text-data
+    
+    Args:
+    text: Messages as text data(str)
+    
+    Returns:
+    clean_tokens: clean string list
+    """
+    # normalize text
     text = re.sub(r"[^a-zA-Z0-9]", " ", text.lower())
+    
+    #token messages
     tokens = word_tokenize(text)
     tokens = [w for w in tokens if w not in stopwords.words("english")]
     clean_tokens = [WordNetLemmatizer().lemmatize(w) for w in tokens]
@@ -41,17 +64,25 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Build model with GridSearchCV
+    
+    Returns:
+    Trained model after performing GridSearch
+    """
+    # make pipeline
     pipeline = Pipeline([
     ('vect', CountVectorizer(tokenizer=tokenize)),
     ('tfidf', TfidfTransformer()),
     ('clf', MultiOutputClassifier(DecisionTreeClassifier()))
     ])
     
+    # hyper-parameter grid
     parameters = {
         'clf__estimator__max_depth': [5,10,None],
         'clf__estimator__min_samples_leaf': [5,11]
     }
-    
+    # make GridSearch
     model = GridSearchCV(pipeline, param_grid=parameters)
     
     return model
@@ -60,8 +91,23 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """
+    Evaluate model
+    
+    Args:
+      model,
+      X_test: X test (dataset)
+      Y_test: y test (dataset)
+      category_names: category names of y
+      
+    Return
+      None
+    """
+    # predict
     y_pred = model.predict(X_test)
     y_pred = pd.DataFrame(y_pred, columns=category_names)
+    
+    # print result
     for col in category_names:
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
         print("Feature : {}\n".format(col))
@@ -69,6 +115,15 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """
+    Save model as pickle file
+    
+    Args: 
+    model: trained model
+    model_filepath: path
+   
+    """
+    # save model as pickle file
     with open(model_filepath, 'wb') as f:
         pickle.dump(model, f)
 
